@@ -382,7 +382,11 @@ function save(){cacheSave();pendingPush=true;doPush();}
 function doPush(){if(!pendingPush)return;apiPost().then(d=>{state={todos:d.todos,notes:d.notes,projects:d.projects,worklog:d.worklog||{},meta:d.meta};rev=d.rev;pendingPush=false;cacheSave();updateSync();}).catch(()=>{updateSync();/* 离线，下次轮询重试 */});}
 function isEditing(){const a=document.activeElement;return a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName);}
 function applySnapshot(d){state={todos:d.todos,notes:d.notes,projects:d.projects,worklog:d.worklog||{},meta:d.meta};rev=d.rev;cacheSave();if(!isEditing())render();}
-function pull(){return apiGet().then(d=>{if(d.rev!==rev)applySnapshot(d);updateSync();}).catch(()=>{updateSync();});}
+function pull(){return apiGet().then(d=>{
+  if(d.rev>rev){ applySnapshot(d); }                 // 服务器更新 → 采用服务器
+  else if(d.rev<rev){ pendingPush=true; doPush(); }  // 服务器落后/被清空(如免费版休眠重启)→ 把本地推上去，绝不覆盖本地
+  updateSync();
+}).catch(()=>{updateSync();});}
 function updateSync(){
   const b=$("#syncbadge");if(!b)return;
   b.classList.toggle("off",!online);
