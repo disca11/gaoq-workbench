@@ -1,0 +1,8 @@
+# 运行时数据（部署后会重新生成；本地数据别推上去）
+data.json
+# 安装器生成的启动脚本
+start-workbench.vbs
+# 日志
+*.log
+# 依赖（本项目零依赖，留空防万一）
+node_modules/
