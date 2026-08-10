@@ -1,0 +1,15 @@
+{
+  "name": "高全的工作台",
+  "short_name": "工作台",
+  "description": "高全的个人办公工作台：待办 / 周月重点 / 灵感 / 项目 / 复盘，云端同步",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#0d9488",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
