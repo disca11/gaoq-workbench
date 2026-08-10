@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d9488">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<title>高全的工作台</title>
+<style>
+  :root{
+    --teal:#0d9488; --teal-d:#0f766e; --cyan:#06b6d4;
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --line-2:#eef2f6;
+    --bg:#f6f9fb; --surface:#ffffff; --red:#dc2626; --red-bg:#fef2f2;
+    --amber:#f59e0b; --green:#16a34a; --chip:#f1f5f9;
+    --shadow:0 1px 2px rgba(15,23,42,.04),0 6px 18px rgba(15,23,42,.06);
+    --radius:14px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);background:var(--bg);color:var(--ink);font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:16px;color:var(--ink)}
+  a{color:var(--teal-d)}
+
+  .app{display:flex;min-height:100vh}
+
+  .sidebar{width:230px;flex:0 0 230px;background:var(--surface);border-right:1px solid var(--line);
+    padding:22px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
+  .brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px}
+  .brand .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--teal),var(--cyan));
+    display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .brand .logo svg{width:20px;height:20px}
+  .brand b{font-size:15px;letter-spacing:.3px}
+  .brand span{display:block;font-size:11px;color:var(--muted);font-weight:400}
+  .nav-btn{display:flex;align-items:center;gap:11px;padding:12px 12px;border-radius:10px;color:var(--muted);
+    font-size:14px;font-weight:500;transition:.15s;text-align:left;width:100%}
+  .nav-btn svg{width:19px;height:19px;flex:0 0 auto}
+  .nav-btn:hover{background:var(--line-2);color:var(--ink)}
+  .nav-btn.active{background:linear-gradient(135deg,rgba(13,148,136,.12),rgba(6,182,212,.12));color:var(--teal-d);font-weight:600}
+  .nav-btn .count{margin-left:auto;font-size:12px;background:var(--chip);color:var(--muted);border-radius:20px;padding:1px 8px}
+  .nav-btn.active .count{background:#fff;color:var(--teal-d)}
+  .side-foot{margin-top:auto;font-size:11px;color:var(--muted);padding:10px;border-top:1px solid var(--line-2)}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{position:relative;overflow:hidden;background:var(--surface);border-bottom:1px solid var(--line);
+    padding:16px 22px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .topbar .hero-bg{position:absolute;inset:0;opacity:.10;pointer-events:none}
+  .topbar h1{font-size:18px;margin:0;font-weight:650;position:relative}
+  .topbar .sub{font-size:12.5px;color:var(--muted);position:relative}
+  .tools{margin-left:auto;display:flex;gap:8px;position:relative;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;
+    font-size:13.5px;font-weight:500;display:inline-flex;align-items:center;gap:7px;min-height:42px;transition:.15s;color:var(--ink)}
+  .btn svg{width:16px;height:16px}
+  .btn:hover{border-color:var(--teal);color:var(--teal-d)}
+  .btn.primary{background:linear-gradient(135deg,var(--teal),var(--cyan));color:#fff;border:none}
+  .btn.primary:hover{opacity:.92;color:#fff}
+  .btn.ghost{border-style:dashed;color:var(--muted)}
+  .btn.danger:hover{border-color:var(--red);color:var(--red)}
+  .btn.tiny{padding:6px 10px;min-height:36px;font-size:13px}
+
+  .syncbadge{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:20px;padding:5px 11px;position:relative}
+  .syncbadge .dot{width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .syncbadge.off .dot{background:var(--red)}
+  .syncbadge .dot.sync{animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .remind{background:#fffbeb;border:1px solid #fde68a;color:#92400e;border-radius:10px;
+    padding:9px 13px;font-size:13px;display:flex;align-items:center;gap:9px;margin:0 22px;width:calc(100% - 44px)}
+  .remind svg{width:17px;height:17px;flex:0 0 auto}
+
+  .banner{margin:16px 22px 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);overflow:hidden}
+  .banner .bhead{display:flex;align-items:center;gap:9px;padding:12px 16px;background:linear-gradient(135deg,rgba(13,148,136,.08),rgba(6,182,212,.06));
+    border-bottom:1px solid var(--line-2);font-weight:600;font-size:14px}
+  .banner .bhead svg{width:18px;height:18px;color:var(--teal-d)}
+  .banner .bhead .ok{margin-left:auto;color:var(--green);font-size:13px;font-weight:500;display:flex;align-items:center;gap:6px}
+  .bitem{display:flex;align-items:center;gap:12px;padding:11px 16px;border-bottom:1px solid var(--line-2)}
+  .bitem:last-child{border-bottom:none}
+  .bitem.over{background:var(--red-bg)}
+  .bitem .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;background:var(--red)}
+  .bitem .btext{flex:1;min-width:0}
+  .bitem .btext b{font-weight:600;font-size:14px}
+  .bitem .btext small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+  .bempty{padding:14px 16px;color:var(--muted);font-size:13.5px}
+
+  .view{padding:18px 22px 60px;flex:1}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+  .card h2{margin:0 0 4px;font-size:16px;font-weight:650;display:flex;align-items:center;gap:9px}
+  .card h2 svg{width:18px;height:18px;color:var(--teal-d)}
+  .card .desc{color:var(--muted);font-size:13px;margin:0 0 14px}
+
+  .form-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-size:12px;color:var(--muted);font-weight:500}
+  .field input,.field select,.field textarea{border:1px solid var(--line);border-radius:9px;padding:10px 12px;background:#fff;outline:none;transition:.15s;min-height:44px}
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.12)}
+  .field.grow{flex:1;min-width:160px}
+  .field textarea{resize:vertical;min-height:60px;line-height:1.45}
+
+  .todo{display:flex;align-items:flex-start;gap:12px;padding:12px 12px;border:1px solid var(--line-2);border-radius:11px;margin-bottom:8px;background:#fff;transition:.15s}
+  .todo:hover{border-color:var(--line)}
+  .todo.over{border-color:#fecaca;background:var(--red-bg)}
+  .todo.done{opacity:.6}
+  .chk{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);flex:0 0 auto;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:.15s;background:#fff}
+  .chk svg{width:14px;height:14px;color:#fff;opacity:0}
+  .todo.done .chk{background:var(--teal);border-color:var(--teal)}
+  .todo.done .chk svg{opacity:1}
+  .todo .body{flex:1;min-width:0}
+  .todo .tt{font-size:14.5px;font-weight:500;word-break:break-word}
+  .todo.done .tt{text-decoration:line-through;color:var(--muted)}
+  .todo .meta{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px;align-items:center}
+  .pill{font-size:11.5px;padding:2px 9px;border-radius:20px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+  .pill.p0{background:#fee2e2;color:#b91c1c}
+  .pill.p1{background:#fef3c7;color:#b45309}
+  .pill.p2{background:#ccfbf1;color:#0f766e}
+  .pill.date{background:var(--chip);color:var(--muted);font-weight:500}
+  .pill.proj{background:#e0f2fe;color:#0369a1;font-weight:500}
+  .pill.ext{background:#ede9fe;color:#6d28d9;font-weight:500}
+  .todo .acts{display:flex;gap:6px;flex:0 0 auto;align-items:center}
+  .iconbtn{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--line-2);background:#fff;transition:.15s}
+  .iconbtn svg{width:16px;height:16px}
+  .iconbtn:hover{color:var(--teal-d);border-color:var(--teal)}
+  .iconbtn.del:hover{color:var(--red);border-color:var(--red)}
+  .extend{font-size:12px;color:#fff;background:var(--amber);border-radius:8px;padding:7px 10px;font-weight:600;min-height:36px}
+  .extend:hover{opacity:.92}
+
+  .tagbar{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
+  .tagchip{font-size:12.5px;padding:5px 11px;border-radius:20px;background:var(--chip);color:var(--muted);border:1px solid transparent;transition:.15s}
+  .tagchip:hover{border-color:var(--teal)}
+  .tagchip.on{background:var(--teal);color:#fff}
+  .note{background:#fff;border:1px solid var(--line-2);border-radius:11px;padding:13px 14px;margin-bottom:10px}
+  .note .nt{font-size:14px;white-space:pre-wrap;word-break:break-word}
+  .note .nm{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;align-items:center}
+  .note .nm .t{font-size:11.5px;background:var(--chip);color:var(--teal-d);border-radius:6px;padding:2px 8px}
+  .note .nm small{margin-left:auto;color:var(--muted);font-size:11.5px}
+
+  .proj{border:1px solid var(--line-2);border-radius:13px;padding:16px;margin-bottom:14px;background:#fff}
+  .proj.stuck{border-color:#fecaca}
+  .proj .ph{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .proj .ph b{font-size:15.5px;font-weight:650}
+  .proj .ph .st{font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:20px;background:#dcfce7;color:#15803d}
+  .proj .ph .st.bad{background:#fee2e2;color:#b91c1c}
+  .proj .ph .acts{margin-left:auto;display:flex;gap:6px}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+  .pgrid .pf{display:flex;flex-direction:column;gap:4px}
+  .pgrid label{font-size:12px;color:var(--muted)}
+  .pgrid input,.pgrid textarea{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#fff;font-size:14px}
+  .pgrid textarea{resize:vertical;min-height:46px}
+  .prow{display:flex;gap:10px;align-items:center;margin-top:12px}
+  .prow label{font-size:13px;display:flex;align-items:center;gap:7px;color:var(--ink);font-weight:500}
+  .prow input[type=checkbox]{width:18px;height:18px;accent-color:var(--teal)}
+  .psave{margin-top:12px;display:flex;gap:8px}
+  .ring-wrap{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line-2)}
+  .ring-wrap .rl{font-size:13px;color:var(--muted)}
+  .ring-wrap .rl b{color:var(--ink);font-size:15px}
+  .linked{margin-top:10px}
+  .linked .lh{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600}
+  .ltodo{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:13.5px;border-bottom:1px solid var(--line-2)}
+  .ltodo:last-child{border-bottom:none}
+  .ltodo .chk{width:18px;height:18px}
+  .ltodo .chk svg{width:11px;height:11px}
+  .ltodo.done .tt{text-decoration:line-through;color:var(--muted)}
+  .ltodo .unlink{margin-left:auto;font-size:11.5px;color:var(--muted);text-decoration:underline}
+
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+  .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+  .stat .n{font-size:26px;font-weight:700;color:var(--teal-d);line-height:1.1}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:4px}
+  .rgrid{display:grid;grid-template-columns:300px 1fr;gap:18px}
+  .chartcard{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+  .chartcard h3{margin:0 0 12px;font-size:14px;font-weight:600}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .bar-row .bl{font-size:13px;width:120px;flex:0 0 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bar-row .bt{flex:1;height:14px;background:var(--line-2);border-radius:8px;overflow:hidden}
+  .bar-row .bf{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--teal),var(--cyan))}
+  .bar-row .bv{font-size:12px;color:var(--muted);width:34px;text-align:right;flex:0 0 auto}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+  .legend i{width:11px;height:11px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:middle}
+  .blockers{margin-top:4px}
+  .blockers .bk{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--line-2);font-size:13.5px}
+  .blockers .bk:last-child{border-bottom:none}
+  .blockers .bk .dot{width:8px;height:8px;border-radius:50%;background:var(--red);margin-top:6px;flex:0 0 auto}
+  .blockers .bk b{font-weight:600}
+  .blockers .bk small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+
+  .empty{color:var(--muted);font-size:13.5px;padding:18px 4px;text-align:center}
+
+  .week-sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .week-sum .ws{background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 14px;font-size:13px;color:var(--muted)}
+  .week-sum .ws b{color:var(--ink);font-size:16px;margin-right:4px}
+  .weekview{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .wcol{border:1px solid var(--line-2);border-radius:11px;padding:10px;background:#fff;min-height:130px}
+  .wcol.today{border-color:var(--teal);background:rgba(13,148,136,.04)}
+  .wh{font-size:13px;font-weight:600;margin-bottom:8px;display:flex;justify-content:space-between;align-items:baseline}
+  .wh small{font-size:11px;color:var(--muted);font-weight:400}
+  .wcol.today .wh b{color:var(--teal-d)}
+  .wtask{font-size:12.5px;padding:6px 8px;border-radius:7px;background:var(--line-2);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .wtask .wd{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+  .wtask.done{opacity:.55}
+  .wtask.done .wt{text-decoration:line-through}
+  .wtask .wt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+  .wmore{font-size:11.5px;color:var(--muted);text-align:center;padding:2px}
+
+  .cal-head{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .cal-head h3{margin:0;font-size:16px;font-weight:650}
+  .cal-head .nav{width:36px;height:36px;border-radius:9px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--muted)}
+  .cal-head .nav:hover{border-color:var(--teal);color:var(--teal-d)}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+  .cal .wd{font-size:12px;color:var(--muted);text-align:center;padding:4px 0;font-weight:600}
+  .cal .cell{border:1px solid var(--line-2);border-radius:10px;min-height:78px;padding:6px;background:#fff;cursor:pointer;transition:.15s;position:relative;overflow:hidden}
+  .cal .cell:hover{border-color:var(--teal)}
+  .cal .cell.today{border-color:var(--teal);background:rgba(13,148,136,.05)}
+  .cal .cell.dim{opacity:.4;background:#fafcff}
+  .cal .cell.sel{border-color:var(--teal);box-shadow:0 0 0 2px rgba(13,148,136,.25)}
+  .cal .cell .dnum{font-size:12.5px;font-weight:600;color:var(--ink)}
+  .cal .cell.today .dnum{color:var(--teal-d)}
+  .cal .cell .dots{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+  .cal .cell .cdot{width:7px;height:7px;border-radius:50%}
+  .cal-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:12px;font-size:12.5px;color:var(--muted)}
+  .cal-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px;vertical-align:middle}
+
+  @media (max-width:768px){
+    .app{flex-direction:column}
+    .sidebar{width:100%;flex:none;height:auto;position:fixed;bottom:0;left:0;right:0;flex-direction:row;
+      padding:6px 2px calc(6px + env(safe-area-inset-bottom));border-right:none;border-top:1px solid var(--line);
+      background:rgba(255,255,255,.96);backdrop-filter:blur(8px);z-index:30;gap:1px;justify-content:space-around}
+    .brand,.side-foot{display:none}
+    .nav-btn{flex-direction:column;gap:2px;padding:6px 2px;font-size:9.5px;border-radius:10px;min-width:48px;justify-content:center;font-weight:500}
+    .nav-btn .count{display:none}
+    .nav-btn svg{width:20px;height:20px}
+    .main{padding-bottom:92px}
+    .topbar{padding:13px 14px}
+    .topbar h1{font-size:16px}
+    .tools{width:100%;margin-left:0}
+    .tools .btn{flex:1;justify-content:center;min-height:46px}
+    .remind,.banner{margin-left:14px;margin-right:14px;width:auto}
+    .view{padding:14px 14px 40px}
+    .stats{grid-template-columns:repeat(2,1fr)}
+    .rgrid{grid-template-columns:1fr}
+    .pgrid{grid-template-columns:1fr}
+    .form-row .field.grow{min-width:100%}
+    .field input,.field select,.field textarea{font-size:16px}
+    .iconbtn{width:42px;height:42px}
+    .extend{min-height:42px;padding:9px 12px}
+    .nav-btn{min-height:44px}
+    .weekview{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;gap:8px;padding-bottom:6px}
+    .wcol{flex:0 0 140px;min-height:150px}
+    .cal .cell{min-height:58px;padding:4px}
+    .cal .cell .dots{margin-top:3px}
+  }
+  /* ---- modal (安装指引) ---- */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:50;padding:18px}
+  .modal-box{background:var(--surface);border-radius:16px;max-width:560px;width:100%;max-height:86vh;overflow:auto;box-shadow:0 20px 60px rgba(15,23,42,.3)}
+  .modal-box .mh{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line-2);font-weight:650;font-size:16px}
+  .modal-box .mh .x{margin-left:auto;width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);border:1px solid var(--line-2);background:#fff}
+  .modal-box .mh .x:hover{color:var(--red);border-color:var(--red)}
+  .modal-box .mb{padding:16px 18px}
+  .modal-box h3{margin:18px 0 8px;font-size:14.5px;color:var(--teal-d);display:flex;align-items:center;gap:8px}
+  .modal-box h3:first-child{margin-top:0}
+  .modal-box ol{margin:0;padding-left:20px;line-height:1.7;font-size:14px;color:var(--ink)}
+  .modal-box ol li{margin-bottom:5px}
+  .modal-box code{background:var(--chip);padding:2px 6px;border-radius:6px;font-size:13px}
+  .modal-box .lan{background:var(--chip);border-radius:10px;padding:11px 13px;margin:6px 0 2px;font-size:14px;word-break:break-word}
+  .modal-box .lan b{color:var(--teal-d)}
+  .modal-box .tip{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.6}
+  /* ---- 二维码扫码直达 ---- */
+  .qr-block{background:var(--chip);border-radius:12px;padding:14px;text-align:center;margin-bottom:6px}
+  .qr-block .qr-title{font-size:14.5px;font-weight:650;color:var(--teal-d);margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .qr-block canvas{background:#fff;border-radius:10px;padding:8px;max-width:100%;height:auto;image-rendering:pixelated;box-shadow:0 2px 10px rgba(15,23,42,.08)}
+  .qr-block .qr-sub{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.6}
+  .qr-block .qr-url{font-size:12.5px;color:var(--ink);margin-top:6px;word-break:break-all;background:#fff;border-radius:8px;padding:6px 8px;border:1px solid var(--line-2)}
+  @media (max-width:768px){ .modal-box{max-height:90vh} }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 5-7"/></svg></div>
+      <div><b>高全的工作台</b><span>云端同步 · 离线可用</span></div>
+    </div>
+    <button class="nav-btn active" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7z"/></svg>今天待办<span class="count" id="cnt-today">0</span></button>
+    <button class="nav-btn" data-view="week"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>本周重点</button>
+    <button class="nav-btn" data-view="month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>本月重点</button>
+    <button class="nav-btn" data-view="notes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>灵感速记<span class="count" id="cnt-notes">0</span></button>
+    <button class="nav-btn" data-view="projects"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>项目跟进<span class="count" id="cnt-proj">0</span></button>
+    <button class="nav-btn" data-view="review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>每周复盘</button>
+    <button class="nav-btn" data-view="worklog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>工作记录</button>
+    <div class="side-foot">数据存于你的同步服务<br>断网时本地缓存仍可改</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <svg class="hero-bg" viewBox="0 0 1200 120" preserveAspectRatio="xMidYMid slice">
+        <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d9488"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs>
+        <circle cx="120" cy="20" r="60" fill="url(#hg)"/><circle cx="320" cy="90" r="40" fill="url(#hg)"/>
+        <circle cx="900" cy="10" r="70" fill="url(#hg)"/><circle cx="1080" cy="80" r="34" fill="url(#hg)"/>
+        <path d="M0 100 Q300 40 600 90 T1200 70" stroke="url(#hg)" stroke-width="2" fill="none"/>
+      </svg>
+      <div>
+        <h1>高全的工作台</h1>
+        <div class="sub" id="datestr"></div>
+      </div>
+      <div class="tools">
+        <span class="syncbadge" id="syncbadge" title="同步状态"><span class="dot"></span><span id="sync-text">同步中…</span></span>
+        <button class="btn" id="btn-export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出备份</button>
+        <button class="btn ghost danger" id="btn-clear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>清空示例</button>
+        <button class="btn" id="btn-install"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>安装</button>
+      </div>
+    </div>
+
+    <div id="remind-slot"></div>
+    <div id="banner-slot"></div>
+    <div class="view" id="view"></div>
+  </main>
+</div>
+
+<div class="modal" id="install-modal" style="display:none">
+  <div class="modal-box">
+    <div class="mh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;color:var(--teal-d)"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>安装到桌面 / 手机<button class="x" onclick="closeInstall()" aria-label="关闭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+    <div class="mb">
+      <div class="qr-block" id="qr-wrap">
+        <div class="qr-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v7M14 21h3"/></svg>手机扫码直达</div>
+        <canvas id="qr-canvas" width="180" height="180"></canvas>
+        <div class="qr-sub">用手机相机 / 扫码 App 扫一下，直接打开工作台（免手动输地址）</div>
+        <div class="qr-url" id="qr-url">…</div>
+      </div>
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>电脑端（Windows）</h3>
+      <ol>
+        <li>进入 <code>高全的工作台</code> 文件夹，<b>双击 <code>install-desktop.bat</code></b>：自动创建桌面图标 + 开机自启，并立即打开。</li>
+        <li>以后开机自动启动；双击桌面「高全的工作台」图标即用（独立窗口，像小程序）。</li>
+        <li>想要浏览器 App：Edge/Chrome 打开后点地址栏右侧「安装」图标，可装成桌面应用。</li>
+      </ol>
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>鸿蒙手机端</h3>
+      <ol>
+        <li>手机与电脑连<b>同一个 Wi-Fi</b>。</li>
+        <li>手机浏览器打开本机地址：<span id="lan-url" class="lan">…</span></li>
+        <li>点浏览器菜单「添加到主屏幕」→ 桌面出现「高全的工作台」图标，点开即 App，专门填报。</li>
+        <li>两端改动<b>实时同步</b>；电脑关机时手机可离线改，电脑开机后自动补传。</li>
+      </ol>
+      <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>本机访问地址</h3>
+      <div class="lan">电脑本机：<b id="lan-local">http://localhost:8787</b></div>
+      <div class="lan">手机同 Wi-Fi：<b id="lan-url2">…</b></div>
+      <p class="tip">若打开是空白，说明同步服务未启动——先在电脑上运行 <code>node server.js</code> 或双击 <code>install-desktop.bat</code>。</p>
+    </div>
+  </div>
+</div>
+
+<script src="qrcode.js"></script>
+<script>
+"use strict";
+const PRI={P0:{label:"P0 紧急",color:"#dc2626"},P1:{label:"P1 重要",color:"#f59e0b"},P2:{label:"P2 常规",color:"#0d9488"}};
+const PRICOLOR={P0:"#dc2626",P1:"#f59e0b",P2:"#0d9488"};
+const API_BASE=""; // 同源；若前端与后端不同源，改成后端地址，如 "https://你的后端.com"
+
+let state={todos:[],notes:[],projects:[],worklog:{},meta:{lastAutoRoll:"",version:1,seeded:false}};
+let rev=0;
+let currentView="today";
+let noteFilter="";
+let monthCursor=null;
+let monthSel=null;
+let online=true;
+let pendingPush=false;
+
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function ymd(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function todayStr(){return ymd(new Date());}
+function addDays(n){const d=new Date();d.setDate(d.getDate()+n);return ymd(d);}
+function yesterdayStr(){return addDays(-1);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function pname(id){const p=state.projects.find(x=>x.id===id);return p?p.name:"";}
+
+/* ---------- 同步层：云端接口 + 本地缓存兜底 ---------- */
+function cacheSave(){try{localStorage.setItem("wb_office_cache",JSON.stringify({state,rev}));}catch(e){}}
+function cacheLoad(){try{const r=localStorage.getItem("wb_office_cache");if(r){const o=JSON.parse(r);state=o.state||state;rev=o.rev||0;return true;}}catch(e){}return false;}
+function apiGet(){return fetch(API_BASE+"/api/state",{cache:"no-store"}).then(r=>r.json()).then(d=>{online=true;return d;}).catch(e=>{online=false;throw e;});}
+function apiPost(){return fetch(API_BASE+"/api/state",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({state,rev:rev+1})}).then(r=>r.json()).then(d=>{online=true;rev=d.rev;return d;}).catch(e=>{online=false;throw e;});}
+function save(){cacheSave();pendingPush=true;doPush();}
+function doPush(){if(!pendingPush)return;apiPost().then(d=>{state={todos:d.todos,notes:d.notes,projects:d.projects,worklog:d.worklog||{},meta:d.meta};rev=d.rev;pendingPush=false;cacheSave();updateSync();}).catch(()=>{updateSync();/* 离线，下次轮询重试 */});}
+function isEditing(){const a=document.activeElement;return a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName);}
+function applySnapshot(d){state={todos:d.todos,notes:d.notes,projects:d.projects,worklog:d.worklog||{},meta:d.meta};rev=d.rev;cacheSave();if(!isEditing())render();}
+function pull(){return apiGet().then(d=>{if(d.rev!==rev)applySnapshot(d);updateSync();}).catch(()=>{updateSync();});}
+function updateSync(){
+  const b=$("#syncbadge");if(!b)return;
+  b.classList.toggle("off",!online);
+  $("#sync-text").textContent=online?(pendingPush?"同步中…":"已同步"):"离线·本地";
+  b.querySelector(".dot").classList.toggle("sync",online&&pendingPush);
+}
+
+/* ---- WebSocket：一端改动，对端瞬间刷新 ---- */
+let ws=null, wsTimer=null, wsRetry=null;
+function connectWS(){
+  if(!("WebSocket" in window)){ startPoll(); return; }
+  const proto=location.protocol==="https:"?"wss":"ws";
+  try{ ws=new WebSocket(proto+"://"+location.host); }catch(e){ startPoll(); return; }
+  ws.onopen=()=>{ if(wsTimer){clearInterval(wsTimer);wsTimer=null;} updateSync(); };
+  ws.onmessage=(ev)=>{ try{ const m=JSON.parse(ev.data); if(m&&m.type==="sync") pull(); }catch(e){} };
+  ws.onclose=()=>{ ws=null; startPoll(); if(!wsRetry)wsRetry=setTimeout(connectWS,3000); };
+  ws.onerror=()=>{ try{ws.close();}catch(e){} };
+}
+function startPoll(){ if(!wsTimer) wsTimer=setInterval(()=>{pull().then(()=>{if(pendingPush)doPush();});},10000); }
+
+/* ---- 安装指引弹窗 ---- */
+function renderQR(url){
+  const canvas=$("#qr-canvas"); if(!canvas||typeof qrcode==='undefined') return false;
+  let qr=null;
+  for(let t=1;t<=10;t++){
+    try{ const q=qrcode(t,'M'); q.addData(url,'Byte'); q.make(); qr=q; break; }
+    catch(e){ qr=null; }   // 容量不足则升级版本重试
+  }
+  if(!qr) return false;
+  const count=qr.getModuleCount();
+  const margin=4, cell=6;                 // 静区 4 模块 + 每模块 6px
+  const size=(count+margin*2)*cell;
+  const dpr=window.devicePixelRatio||1;
+  canvas.width=size*dpr; canvas.height=size*dpr;
+  canvas.style.width=size+'px'; canvas.style.height=size+'px';
+  const ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,size,size);
+  ctx.fillStyle='#0f172a';
+  for(let r=0;r<count;r++)for(let c=0;c<count;c++){
+    if(qr.isDark(r,c)) ctx.fillRect((c+margin)*cell,(r+margin)*cell,cell,cell);
+  }
+  return true;
+}
+function showQR(url){
+  const wrap=$("#qr-wrap"), cv=$("#qr-canvas"), u=$("#qr-url");
+  const ok=renderQR(url);
+  if(wrap) wrap.style.display = ok ? 'block' : 'none';
+  if(u) u.textContent=url;
+}
+function openInstall(){
+  const m=$("#install-modal"); if(!m)return; m.style.display="flex";
+  const origin=location.origin;
+  const isLocal=/^https?:\/\/(localhost|127\.)/.test(origin) || origin==="file://";
+  if(!isLocal){
+    // 已部署到公网：直接把当前页面地址给手机扫码，任何网络都能访问
+    const a=$("#lan-url"),b=$("#lan-url2"),c=$("#lan-local");
+    if(a)a.textContent=origin; if(b)b.textContent=origin; if(c)c.textContent=origin;
+    showQR(origin);
+    return;
+  }
+  fetch("/api/lan").then(r=>r.json()).then(d=>{
+    const lan=(d.ips&&d.ips[0])?("http://"+d.ips[0]+":"+d.port):(d.local||"http://localhost:8787");
+    const el1=$("#lan-url"),el2=$("#lan-url2"),el3=$("#lan-local");
+    if(el1)el1.textContent=lan; if(el2)el2.textContent=lan; if(el3)el3.textContent=d.local||"http://localhost:8787";
+    showQR(lan);
+  }).catch(()=>{
+    const t="（请先启动服务：node server.js）";
+    const a=$("#lan-url"),b=$("#lan-url2"); if(a)a.textContent=t; if(b)b.textContent=t;
+    const w=$("#qr-wrap"); if(w)w.style.display='none';
+  });
+}
+function closeInstall(){ const m=$("#install-modal"); if(m)m.style.display="none"; }
+window.addEventListener("click",e=>{ const m=$("#install-modal"); if(m&&e.target===m) m.style.display="none"; });
+const _bi=$("#btn-install"); if(_bi)_bi.onclick=openInstall;
+
+function seed(){
+  const t=todayStr(), y=addDays(-3), f2=addDays(2), f5=addDays(5), w3=addDays(3), w5=addDays(6);
+  const p1=uid(),p2=uid();
+  state.projects=[
+    {id:p1,name:"HR服务平台汇报",currentStep:"完成单页PDF递进式图示",nextStep:"与领导确认版式后定稿",blocked:false,blockedNote:"",seed:true,createdAt:Date.now()},
+    {id:p2,name:"青岛前哨HR协议",currentStep:"起草异地派驻结算条款",nextStep:"明确工伤(非基金)责任衔接",blocked:true,blockedNote:"甲方承担全部非基金责任的表述待法务确认",seed:true,createdAt:Date.now()}
+  ];
+  state.todos=[
+    {id:uid(),text:"完成领导汇报材料终稿",priority:"P0",deadline:y,done:false,projectId:p1,extendedCount:0,seed:true,createdAt:Date.now()},
+    {id:uid(),text:"回复客户邮件并确认需求",priority:"P1",deadline:t,done:false,projectId:"",extendedCount:0,seed:true,createdAt:Date.now()},
+    {id:uid(),text:"阅读行业研报两份",priority:"P2",deadline:f2,done:false,projectId:"",extendedCount:0,seed:true,createdAt:Date.now()},
+    {id:uid(),text:"预约下周面试时间",priority:"P1",deadline:f5,done:false,projectId:"",extendedCount:0,seed:true,createdAt:Date.now()},
+    {id:uid(),text:"梳理外包升级路径费用结构",priority:"P0",deadline:w3,done:false,projectId:p1,extendedCount:0,seed:true,createdAt:Date.now()},
+    {id:uid(),text:"整理本周复盘卡点汇总",priority:"P2",deadline:w5,done:false,projectId:"",extendedCount:0,seed:true,createdAt:Date.now()}
+  ];
+  state.notes=[
+    {id:uid(),text:"想到用递进式图示(起源→主体→升级)替代表格呈现外包升级路径，更直观。",tags:["可视化","汇报"],seed:true,createdAt:Date.now()},
+    {id:uid(),text:"外包推荐费用与太行科技的协同关系需厘清，先列待确认事项。",tags:["待办","财务"],seed:true,createdAt:Date.now()}
+  ];
+  state.meta.seeded=true;
+}
+
+/* 把一条完成记录写入当日工作完成记录（按 todoId 去重） */
+function logWork(entry){
+  const d=entry.date||todayStr();
+  state.worklog=state.worklog||{};
+  if(!state.worklog[d])state.worklog[d]=[];
+  if(entry.todoId&&state.worklog[d].some(x=>x.todoId===entry.todoId))return;
+  state.worklog[d].push(Object.assign({id:uid(),date:d,createdAt:Date.now()},entry));
+}
+
+function autoRoll(){
+  const t=todayStr(),y=yesterdayStr();
+  if(state.meta.lastAutoRoll===t)return;
+  state.todos.forEach(o=>{if(!o.done&&o.deadline===y){o.deadline=t;o.extendedCount=(o.extendedCount||0)+1;}});
+  state.meta.lastAutoRoll=t;
+}
+
+function totalCount(){return state.todos.length+state.notes.length+state.projects.length;}
+function weekRange(){
+  const d=new Date();const dow=(d.getDay()+6)%7;
+  const mon=new Date(d);mon.setDate(d.getDate()-dow);mon.setHours(0,0,0,0);
+  const sun=new Date(mon);sun.setDate(mon.getDate()+6);sun.setHours(23,59,59,999);
+  return {mon,sun};
+}
+function inWeek(ds){const {mon,sun}=weekRange();const t=new Date(ds+"T00:00:00");return t>=mon&&t<=sun;}
+
+/* ============ RENDER ============ */
+function renderTopMeta(){
+  const d=new Date();
+  const wk=["周日","周一","周二","周三","周四","周五","周六"][d.getDay()];
+  $("#datestr").textContent=ymd(d)+" "+wk;
+  const open=state.todos.filter(o=>!o.done).length;
+  $("#cnt-today").textContent=open;
+  $("#cnt-notes").textContent=state.notes.length;
+  $("#cnt-proj").textContent=state.projects.length;
+  const slot=$("#remind-slot");const tot=totalCount();
+  if(tot>=20){
+    slot.innerHTML='<div class="remind"><svg viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>数据已积累 '+tot+' 条，建议点右上角「导出备份」存一份本地副本，避免意外。</div>';
+  }else{slot.innerHTML="";}
+}
+
+function renderBanner(){
+  const today=todayStr();
+  const overdue=state.todos.filter(o=>!o.done&&o.deadline&&o.deadline<today);
+  const stuck=state.projects.filter(p=>p.blocked);
+  const el=$("#banner-slot");
+  let html='<div class="banner"><div class="bhead"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 3 2 5 2 8h10c0-3 2-5 2-8a7 7 0 0 0-7-7z"/><path d="M9 21h6"/></svg>今天要处理的';
+  if(overdue.length===0&&stuck.length===0){
+    html+='<span class="ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M20 6 9 17l-5-5"/></svg>当前没有紧急事项，状态良好</span>';
+  }
+  html+='</div>';
+  if(overdue.length===0&&stuck.length===0){
+    html+='<div class="bempty">没有逾期任务，也没有卡住的项目。保持节奏。</div>';
+  }else{
+    overdue.forEach(o=>{
+      html+='<div class="bitem over"><span class="dot"></span><div class="btext"><b>'+esc(o.text)+'</b><small>逾期任务 · 截止 '+esc(o.deadline)+(o.extendedCount>0?(' · 已顺延'+o.extendedCount+'次'):'')+'</small></div><button class="extend" data-ext="'+o.id+'">顺延到明天</button></div>';
+    });
+    stuck.forEach(p=>{
+      html+='<div class="bitem over"><span class="dot"></span><div class="btext"><b>'+esc(p.name)+'</b><small>卡住的项目'+(p.blockedNote?(' · '+esc(p.blockedNote)):'')+'</small></div><button class="btn tiny" data-goproj="'+p.id+'">去处理</button></div>';
+    });
+  }
+  html+='</div>';
+  el.innerHTML=html;
+  el.querySelectorAll("[data-ext]").forEach(b=>b.onclick=()=>extendTodo(b.getAttribute("data-ext")));
+  el.querySelectorAll("[data-goproj]").forEach(b=>b.onclick=()=>{switchView("projects");setTimeout(()=>{const c=document.getElementById("proj-"+b.getAttribute("data-goproj"));if(c)c.scrollIntoView({behavior:"smooth",block:"center"});},60);});
+}
+
+function render(){
+  renderTopMeta();renderBanner();
+  if(currentView==="today")renderToday();
+  else if(currentView==="week")renderWeek();
+  else if(currentView==="month")renderMonth();
+  else if(currentView==="notes")renderNotes();
+  else if(currentView==="projects")renderProjects();
+  else if(currentView==="review")renderReview();
+  else if(currentView==="worklog")renderWorklog();
+}
+
+/* ---- TODAY ---- */
+function renderToday(){
+  const today=todayStr();
+  const open=state.todos.filter(o=>!o.done);
+  const done=state.todos.filter(o=>o.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0)).slice(0,8);
+  let html='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>新增任务</h2>';
+  html+='<div class="form-row"><div class="field grow"><label>任务内容</label><input id="t-text" placeholder="要做点什么？"></div>';
+  html+='<div class="field"><label>轻重缓急</label><select id="t-pri"><option value="P0">P0 紧急</option><option value="P1" selected>P1 重要</option><option value="P2">P2 常规</option></select></div>';
+  html+='<div class="field"><label>截止日期</label><input id="t-date" type="date"></div>';
+  html+='<div class="field"><label>关联项目</label><select id="t-proj"><option value="">不关联</option>'+state.projects.map(p=>'<option value="'+p.id+'">'+esc(p.name)+'</option>').join("")+'</select></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary" id="t-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>添加</button></div></div></div>';
+
+  const over=open.filter(o=>o.deadline&&o.deadline<today).sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  const tod=open.filter(o=>o.deadline===today);
+  const nodate=open.filter(o=>!o.deadline);
+  const future=open.filter(o=>o.deadline&&o.deadline>today).sort((a,b)=>a.deadline.localeCompare(b.deadline));
+  const futGroups={};future.forEach(o=>{(futGroups[o.deadline]=futGroups[o.deadline]||[]).push(o);});
+
+  html+='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>任务清单</h2><div class="desc">逾期标红，可一键顺延到明天；未来任务按日期分组展示。</div>';
+  if(open.length===0&&done.length===0)html+='<div class="empty">还没有任务，先在上面加一条吧。</div>';
+  if(over.length){html+=grpHead("over","逾期未完成",over.length);html+=over.map(todoRow).join("");}
+  if(tod.length){html+=grpHead("today","今天",tod.length);html+=tod.map(todoRow).join("");}
+  if(nodate.length){html+=grpHead("","无截止日期",nodate.length);html+=nodate.map(todoRow).join("");}
+  Object.keys(futGroups).sort().forEach(d=>{html+=grpHead("","未来 · "+d,futGroups[d].length);html+=futGroups[d].map(todoRow).join("");});
+  if(done.length){
+    html+='<div class="grp-head"><span class="bar" style="background:var(--green)"></span>最近完成 <span class="cnt">'+done.length+'</span></div>';
+    html+=done.map(o=>todoRow(o)).join("");
+  }
+  html+='</div>';
+  $("#view").innerHTML=html;
+  $("#t-add").onclick=addTodo;
+  $("#t-text").addEventListener("keydown",e=>{if(e.key==="Enter")addTodo();});
+  bindTodoEvents();
+}
+function grpHead(cls,label,n){
+  return '<div class="grp-head '+(cls||"")+'"><span class="bar"></span>'+esc(label)+' <span class="cnt">'+n+' 项</span></div>';
+}
+function todoRow(o){
+  const today=todayStr();
+  const over=o.deadline&&o.deadline<today&&!o.done;
+  let meta='';
+  meta+='<span class="pill '+(o.priority||"P2").toLowerCase()+'">'+PRI[o.priority||"P2"].label+'</span>';
+  if(o.deadline)meta+='<span class="pill date">'+esc(o.deadline)+'</span>';
+  if(o.projectId)meta+='<span class="pill proj">'+esc(pname(o.projectId))+'</span>';
+  if(o.extendedCount>0)meta+='<span class="pill ext">顺延'+o.extendedCount+'次</span>';
+  let acts='<button class="iconbtn del" data-del="'+o.id+'" title="删除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>';
+  if(over)acts='<button class="extend" data-ext="'+o.id+'">顺延到明天</button>'+acts;
+  return '<div class="todo '+(over?"over":"")+' '+(o.done?"done":"")+'" data-id="'+o.id+'">'
+    +'<div class="chk" data-toggle="'+o.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>'
+    +'<div class="body"><div class="tt">'+esc(o.text)+'</div><div class="meta">'+meta+'</div></div>'
+    +'<div class="acts">'+acts+'</div></div>';
+}
+function bindTodoEvents(){
+  document.querySelectorAll("[data-toggle]").forEach(c=>c.onclick=()=>toggleTodo(c.getAttribute("data-toggle")));
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>delTodo(b.getAttribute("data-del")));
+  document.querySelectorAll("[data-ext]").forEach(b=>b.onclick=()=>extendTodo(b.getAttribute("data-ext")));
+}
+function addTodo(){
+  const text=$("#t-text").value.trim();if(!text){$("#t-text").focus();return;}
+  state.todos.push({id:uid(),text,priority:$("#t-pri").value,deadline:$("#t-date").value||"",done:false,projectId:$("#t-proj").value,extendedCount:0,createdAt:Date.now()});
+  save();render();
+}
+function toggleTodo(id){
+  const o=state.todos.find(x=>x.id===id);if(!o)return;
+  o.done=!o.done;if(o.done){o.doneAt=Date.now();logWork({date:todayStr(),source:"待办",title:o.text,todoId:o.id,note:pname(o.projectId)?("项目："+pname(o.projectId)):""});}
+  else o.doneAt=null;
+  save();render();
+}
+function delTodo(id){state.todos=state.todos.filter(x=>x.id!==id);save();render();}
+function extendTodo(id){
+  const o=state.todos.find(x=>x.id===id);if(!o)return;
+  o.deadline=addDays(1);o.extendedCount=(o.extendedCount||0)+1;save();render();
+}
+
+/* ---- WEEK FOCUS ---- */
+function renderWeek(){
+  const {mon,sun}=weekRange();
+  const today=todayStr();
+  const weekTodos=state.todos.filter(o=>o.deadline&&inWeek(o.deadline));
+  const sumP0=weekTodos.filter(o=>o.priority==="P0"&&!o.done).length;
+  const sumP1=weekTodos.filter(o=>o.priority==="P1"&&!o.done).length;
+  const sumOpen=weekTodos.filter(o=>!o.done).length;
+  const sumDone=weekTodos.filter(o=>o.done).length;
+  const wd=["周一","周二","周三","周四","周五","周六","周日"];
+  let html='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>本周重点</h2>';
+  html+='<div class="desc">本周（'+ymd(mon).slice(5)+' 至 '+ymd(sun).slice(5)+'）按天排列，今日高亮。</div>';
+  html+='<div class="week-sum"><div class="ws"><b>'+sumOpen+'</b>待办</div><div class="ws"><b>'+sumDone+'</b>已完成</div><div class="ws"><b style="color:#dc2626">'+sumP0+'</b>P0 紧急</div><div class="ws"><b style="color:#b45309">'+sumP1+'</b>P1 重要</div></div>';
+  html+='<div class="weekview">';
+  for(let i=0;i<7;i++){
+    const d=new Date(mon);d.setDate(mon.getDate()+i);const ds=ymd(d);
+    const items=weekTodos.filter(o=>o.deadline===ds).sort((a,b)=>(a.done-b.done));
+    const isToday=ds===today;
+    html+='<div class="wcol'+(isToday?' today':'')+'"><div class="wh"><b>'+wd[i]+'</b><small>'+ds.slice(5)+'</small></div>';
+    if(items.length===0)html+='<div class="wmore">—</div>';
+    items.forEach(o=>{
+      html+='<div class="wtask '+(o.done?'done':'')+'" data-gotodo="'+o.id+'"><span class="wd" style="background:'+PRICOLOR[o.priority||"P2"]+'"></span><span class="wt">'+esc(o.text)+'</span></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div></div>';
+
+  /* 列表式：本周任务增删 */
+  const wlist=weekTodos.slice().sort((a,b)=>a.deadline.localeCompare(b.deadline)||(a.done-b.done));
+  html+='<div class="card" style="margin-top:18px"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>本周清单</h2><div class="desc">直接在下方新增 / 删除本周任务，新增会落到对应日期的周格中。</div>';
+  html+='<div class="form-row"><div class="field grow"><label>任务内容</label><input id="w-text" placeholder="本周要做的事…"></div>';
+  html+='<div class="field"><label>轻重缓急</label><select id="w-pri"><option value="P0">P0 紧急</option><option value="P1" selected>P1 重要</option><option value="P2">P2 常规</option></select></div>';
+  html+='<div class="field"><label>安排到</label><select id="w-date">';
+  for(let i=0;i<7;i++){const d=new Date(mon);d.setDate(mon.getDate()+i);const ds=ymd(d);html+='<option value="'+ds+'"'+(ds===today?' selected':'')+'>'+wd[i]+' '+ds.slice(5)+'</option>';}
+  html+='</select></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary" id="w-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>添加</button></div></div>';
+  if(wlist.length){html+='<div class="grp" style="margin-top:14px">'+wlist.map(todoRow).join("")+'</div>';}
+  else{html+='<div class="empty" style="margin-top:14px">本周还没有任务，加一条吧。</div>';}
+  html+='</div>';
+
+  $("#view").innerHTML=html;
+  document.querySelectorAll("[data-gotodo]").forEach(c=>c.onclick=()=>{switchView("today");setTimeout(()=>{const el=document.querySelector('[data-id="'+c.getAttribute("data-gotodo")+'"]');if(el)el.scrollIntoView({behavior:"smooth",block:"center"});},60);});
+  $("#w-add").onclick=addWeekTask;
+  $("#w-text").addEventListener("keydown",e=>{if(e.key==="Enter")addWeekTask();});
+  bindTodoEvents();
+}
+
+function addWeekTask(){
+  const text=$("#w-text").value.trim();if(!text){$("#w-text").focus();return;}
+  state.todos.push({id:uid(),text,priority:$("#w-pri").value,deadline:$("#w-date").value||todayStr(),done:false,projectId:"",extendedCount:0,createdAt:Date.now()});
+  save();renderWeek();
+}
+
+function addMonthTask(){
+  const text=$("#m-text").value.trim();if(!text){$("#m-text").focus();return;}
+  state.todos.push({id:uid(),text,priority:$("#m-pri").value,deadline:$("#m-date").value||todayStr(),done:false,projectId:"",extendedCount:0,createdAt:Date.now()});
+  save();renderMonth();
+}
+
+/* ---- MONTH FOCUS (calendar) ---- */
+function renderMonth(){
+  if(!monthCursor)monthCursor=todayStr().slice(0,7);
+  const [yy,mm]=monthCursor.split("-").map(Number);
+  const first=new Date(yy,mm-1,1);
+  const startDow=(first.getDay()+6)%7;
+  const daysInMonth=new Date(yy,mm,0).getDate();
+  const today=todayStr();
+  const monthTodos=state.todos.filter(o=>o.deadline&&o.deadline.slice(0,7)===monthCursor);
+  const openMonth=monthTodos.filter(o=>!o.done);
+  const p0=openMonth.filter(o=>o.priority==="P0").length;
+  const p1=openMonth.filter(o=>o.priority==="P1").length;
+  const wd=["一","二","三","四","五","六","日"];
+  let html='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>本月重点</h2>';
+  html+='<div class="desc">点日历里的日期，下方列出当天任务。圆点表示当日有任务，颜色对应最高优先级。</div>';
+  html+='<div class="cal-head"><button class="nav" data-cal="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M15 18l-6-6 6-6"/></svg></button><h3>'+yy+' 年 '+mm+' 月</h3><button class="nav" data-cal="next"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M9 18l6-6-6-6"/></svg></button><div style="margin-left:auto;font-size:13px;color:var(--muted)">本月待办 <b style="color:var(--ink)">'+openMonth.length+'</b> · P0 <b style="color:#dc2626">'+p0+'</b> · P1 <b style="color:#b45309">'+p1+'</b></div></div>';
+  html+='<div class="cal"><div class="wd">'+wd.join('</div><div class="wd">')+'</div>';
+  let cells=[];
+  for(let i=0;i<startDow;i++){const pd=new Date(yy,mm-1,1-(startDow-i));cells.push({dim:true,ds:ymd(pd)});}
+  for(let d=1;d<=daysInMonth;d++)cells.push({dim:false,ds:yy+"-"+String(mm).padStart(2,"0")+"-"+String(d).padStart(2,"0")});
+  while(cells.length%7!==0)cells.push({dim:true,ds:""});
+  cells.forEach(c=>{
+    if(!c.ds){html+='<div class="cell dim"></div>';return;}
+    const items=monthTodos.filter(o=>o.deadline===c.ds);
+    const top=items.filter(o=>!o.done).sort((a,b)=>priRank(a)-priRank(b))[0]||items[0];
+    let dots='';
+    if(items.length){
+      const col=top?(top.done?"#94a3b8":PRICOLOR[top.priority||"P2"]):"#94a3b8";
+      const n=Math.min(items.length,5);
+      for(let k=0;k<n;k++)dots+='<span class="cdot" style="background:'+col+'"></span>';
+    }
+    const cls=(c.ds===today?"today ":"")+(c.ds===monthSel?"sel ":"");
+    html+='<div class="cell '+(c.dim?"dim ":"")+cls+'" data-cell="'+c.ds+'"><div class="dnum">'+Number(c.ds.slice(8,10))+'</div><div class="dots">'+dots+'</div></div>';
+  });
+  html+='</div>';
+  html+='<div class="cal-legend"><span><i style="background:#dc2626"></i>P0 紧急</span><span><i style="background:#f59e0b"></i>P1 重要</span><span><i style="background:#0d9488"></i>P2 常规</span><span><i style="background:#94a3b8"></i>已完成</span></div>';
+
+  html+='<div style="margin-top:18px">';
+  if(monthSel&&monthSel.slice(0,7)===monthCursor){
+    const dayItems=state.todos.filter(o=>o.deadline===monthSel).sort((a,b)=>priRank(a)-priRank(b));
+    html+='<h3 style="font-size:14px;margin:0 0 10px">'+monthSel+' 当天任务（'+dayItems.length+'）</h3>';
+    html+=dayItems.length?dayItems.map(todoRow).join(""):'<div class="empty">这一天没有任务。</div>';
+    html+='<button class="btn tiny" id="m-clear" style="margin-top:6px">清除日期选择</button>';
+  }else{
+    const sorted=openMonth.slice().sort((a,b)=>a.deadline.localeCompare(b.deadline));
+    html+='<h3 style="font-size:14px;margin:0 0 10px">本月未完成（按截止日）</h3>';
+    html+=sorted.length?sorted.map(todoRow).join(""):'<div class="empty">本月没有未完成的任务，漂亮。</div>';
+  }
+  html+='</div></div>';
+
+  /* 列表式：本月任务增删 */
+  const mlist=monthTodos.slice().sort((a,b)=>a.deadline.localeCompare(b.deadline)||(a.done-b.done));
+  html+='<div class="card" style="margin-top:18px"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>本月清单</h2><div class="desc">直接在下方新增 / 删除本月任务，截止日期填在本月的任务会显示在月历上。</div>';
+  html+='<div class="form-row"><div class="field grow"><label>任务内容</label><input id="m-text" placeholder="本月要做的事…"></div>';
+  html+='<div class="field"><label>轻重缓急</label><select id="m-pri"><option value="P0">P0 紧急</option><option value="P1" selected>P1 重要</option><option value="P2">P2 常规</option></select></div>';
+  html+='<div class="field"><label>截止日期</label><input id="m-date" type="date" value="'+today+'"></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary" id="m-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>添加</button></div></div>';
+  if(mlist.length){html+='<div class="grp" style="margin-top:14px">'+mlist.map(todoRow).join("")+'</div>';}
+  else{html+='<div class="empty" style="margin-top:14px">本月还没有任务，加一条吧。</div>';}
+  html+='</div>';
+
+  $("#view").innerHTML=html;
+  document.querySelectorAll("[data-cal]").forEach(b=>b.onclick=()=>{
+    let[cy,cm]=monthCursor.split("-").map(Number);
+    if(b.getAttribute("data-cal")==="prev")cm--;else cm++;
+    if(cm<1){cm=12;cy--;}if(cm>12){cm=1;cy++;}
+    monthCursor=cy+"-"+String(cm).padStart(2,"0");renderMonth();
+  });
+  document.querySelectorAll("[data-cell]").forEach(c=>c.onclick=()=>{monthSel=c.getAttribute("data-cell");renderMonth();});
+  const mc=$("#m-clear");if(mc)mc.onclick=()=>{monthSel=null;renderMonth();};
+  $("#m-add").onclick=addMonthTask;
+  $("#m-text").addEventListener("keydown",e=>{if(e.key==="Enter")addMonthTask();});
+  bindTodoEvents();
+}
+function priRank(o){return ({P0:0,P1:1,P2:2})[o.priority||"P2"]||0;}
+
+/* ---- NOTES ---- */
+function renderNotes(){
+  let html='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>随手记</h2>';
+  html+='<div class="form-row"><div class="field grow"><label>想法内容</label><textarea id="n-text" placeholder="闪过的念头、待深挖的点子……"></textarea></div></div>';
+  html+='<div class="form-row" style="margin-top:10px"><div class="field grow"><label>标签（用逗号分隔，如：汇报,可视化）</label><input id="n-tags" placeholder="标签"></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary" id="n-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>记录</button></div></div></div>';
+
+  const allTags={};state.notes.forEach(n=>(n.tags||[]).forEach(t=>allTags[t]=(allTags[t]||0)+1));
+  const tagKeys=Object.keys(allTags);
+  html+='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 13.4 12 22l-9-9V4a2 2 0 0 1 2-2h8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>灵感库</h2>';
+  if(tagKeys.length){html+='<div class="tagbar"><button class="tagchip '+(noteFilter===""?"on":"")+'" data-tag="">全部 '+state.notes.length+'</button>'+tagKeys.map(t=>'<button class="tagchip '+(noteFilter===t?"on":"")+'" data-tag="'+esc(t)+'">'+esc(t)+' '+allTags[t]+'</button>').join("")+'</div>';}
+  const list=noteFilter?state.notes.filter(n=>(n.tags||[]).includes(noteFilter)):state.notes.slice().sort((a,b)=>b.createdAt-a.createdAt);
+  if(list.length===0)html+='<div class="empty">还没有灵感，记一条试试。</div>';
+  list.forEach(n=>{
+    const tags=(n.tags||[]).map(t=>'<span class="t">'+esc(t)+'</span>').join("");
+    html+='<div class="note"><div class="nt">'+esc(n.text)+'</div><div class="nm">'+tags+'<small>'+new Date(n.createdAt).toLocaleString("zh-CN",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})+'</small><button class="iconbtn del" data-ndel="'+n.id+'" style="margin-left:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></div>';
+  });
+  html+='</div>';
+  $("#view").innerHTML=html;
+  $("#n-add").onclick=addNote;
+  document.querySelectorAll("[data-tag]").forEach(c=>c.onclick=()=>{noteFilter=c.getAttribute("data-tag");renderNotes();});
+  document.querySelectorAll("[data-ndel]").forEach(b=>b.onclick=()=>{state.notes=state.notes.filter(x=>x.id!==b.getAttribute("data-ndel"));save();render();});
+}
+function addNote(){
+  const text=$("#n-text").value.trim();if(!text){$("#n-text").focus();return;}
+  const tags=$("#n-tags").value.split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+  state.notes.push({id:uid(),text,tags,createdAt:Date.now()});
+  $("#n-text").value="";$("#n-tags").value="";save();render();
+}
+
+/* ---- PROJECTS ---- */
+function renderProjects(){
+  let html='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>新建项目</h2>';
+  html+='<div class="form-row"><div class="field grow"><label>项目名称</label><input id="p-name" placeholder="例如：XX 项目交付"></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary" id="p-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>创建</button></div></div></div>';
+  if(state.projects.length===0)html+='<div class="card"><div class="empty">还没有项目，先建一个吧。</div></div>';
+  state.projects.forEach(p=>html+=projCard(p));
+  $("#view").innerHTML=html;
+  $("#p-add").onclick=()=>{const n=$("#p-name").value.trim();if(!n)return;state.projects.push({id:uid(),name:n,currentStep:"",nextStep:"",blocked:false,blockedNote:"",createdAt:Date.now()});$("#p-name").value="";save();render();};
+  bindProjectEvents();
+}
+function ring(pct){
+  const r=22,c=2*Math.PI*r,off=c*(1-pct/100);
+  return '<svg width="56" height="56" viewBox="0 0 56 56"><circle cx="28" cy="28" r="'+r+'" fill="none" stroke="#eef2f6" stroke-width="7"/><circle cx="28" cy="28" r="'+r+'" fill="none" stroke="#0d9488" stroke-width="7" stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'" transform="rotate(-90 28 28)"/><text x="28" y="32" text-anchor="middle" font-size="13" font-weight="700" fill="#0f172a">'+Math.round(pct)+'%</text></svg>';
+}
+function projCard(p){
+  const linked=state.todos.filter(o=>o.projectId===p.id);
+  const doneCnt=linked.filter(o=>o.done).length;
+  const pct=linked.length?Math.round(doneCnt/linked.length*100):0;
+  let html='<div class="proj '+(p.blocked?"stuck":"")+'" id="proj-'+p.id+'"><div class="ph"><b>'+esc(p.name)+'</b>';
+  html+='<span class="st '+(p.blocked?"bad":"")+'">'+(p.blocked?"卡住":"推进中")+'</span>';
+  html+='<div class="acts"><button class="iconbtn del" data-pdel="'+p.id+'" title="删除项目"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></div></div>';
+  html+='<div class="pgrid"><div class="pf"><label>当前进度</label><input data-f="currentStep" data-id="'+p.id+'" value="'+esc(p.currentStep)+'"></div>';
+  html+='<div class="pf"><label>下一步</label><input data-f="nextStep" data-id="'+p.id+'" value="'+esc(p.nextStep)+'"></div></div>';
+  html+='<div class="prow"><label><input type="checkbox" data-f="blocked" data-id="'+p.id+'" '+(p.blocked?"checked":"")+'> 项目卡住了</label></div>';
+  html+='<div class="pf" style="margin-top:8px"><label>卡点说明</label><input data-f="blockedNote" data-id="'+p.id+'" value="'+esc(p.blockedNote)+'" placeholder="卡在哪儿？"></div>';
+  html+='<div class="psave"><button class="btn primary tiny" data-psave="'+p.id+'">保存</button></div>';
+  html+='<div class="ring-wrap">'+ring(pct)+'<div class="rl">关联待办 <b>'+linked.length+'</b> 项<br>已完成 '+doneCnt+' · 进度 '+pct+'%</div></div>';
+  if(linked.length){
+    html+='<div class="linked"><div class="lh">关联任务（可在此勾选完成 / 解除关联）</div>';
+    linked.forEach(o=>{
+      html+='<div class="ltodo '+(o.done?"done":"")+'"><div class="chk" data-toggle="'+o.id+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><span class="tt">'+esc(o.text)+'</span><span class="pill '+(o.priority||"P2").toLowerCase()+'" style="margin-left:6px">'+PRI[o.priority||"P2"].label+'</span><button class="unlink" data-unlink="'+o.id+'">解除</button></div>';
+    });
+    html+='</div>';
+  }
+  html+='</div>';
+  return html;
+}
+function bindProjectEvents(){
+  document.querySelectorAll("[data-f]").forEach(i=>{
+    i.addEventListener("change",()=>{
+      const p=state.projects.find(x=>x.id===i.getAttribute("data-id"));if(!p)return;
+      const f=i.getAttribute("data-f");
+      p[f]=i.type==="checkbox"?i.checked:i.value;
+    });
+  });
+  document.querySelectorAll("[data-psave]").forEach(b=>b.onclick=()=>{save();render();});
+  document.querySelectorAll("[data-pdel]").forEach(b=>{b.onclick=()=>{if(confirm("删除该项目？关联的待办会变为「不关联」。")){const id=b.getAttribute("data-pdel");state.projects=state.projects.filter(x=>x.id!==id);state.todos.forEach(o=>{if(o.projectId===id)o.projectId="";});save();render();}};});
+  document.querySelectorAll("[data-unlink]").forEach(b=>b.onclick=()=>{const o=state.todos.find(x=>x.id===b.getAttribute("data-unlink"));if(o)o.projectId="";save();render();});
+  document.querySelectorAll(".proj [data-toggle]").forEach(c=>c.onclick=()=>toggleTodo(c.getAttribute("data-toggle")));
+}
+
+/* ---- REVIEW ---- */
+function donut(data){
+  const total=data.reduce((s,d)=>s+d.value,0);
+  if(total===0)return '<svg width="160" height="160" viewBox="0 0 160 160"><circle cx="80" cy="80" r="60" fill="none" stroke="#eef2f6" stroke-width="20"/><text x="80" y="86" text-anchor="middle" font-size="14" fill="#94a3b8">暂无</text></svg>';
+  const r=60,c=2*Math.PI*r;let off=0;let segs="";
+  data.forEach(d=>{const len=d.value/total*c;segs+='<circle cx="80" cy="80" r="'+r+'" fill="none" stroke="'+d.color+'" stroke-width="20" stroke-dasharray="'+len+' '+(c-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 80 80)"/>';off+=len;});
+  return '<svg width="160" height="160" viewBox="0 0 160 160">'+segs+'<text x="80" y="76" text-anchor="middle" font-size="30" font-weight="700" fill="#0f172a">'+total+'</text><text x="80" y="98" text-anchor="middle" font-size="12" fill="#64748b">已完成</text></svg>';
+}
+function renderReview(){
+  const {mon,sun}=weekRange();
+  const monS=mon.getTime(),sunS=sun.getTime();
+  const doneWeek=state.todos.filter(o=>o.done&&o.doneAt>=monS&&o.doneAt<=sunS);
+  const openTotal=state.todos.filter(o=>!o.done).length;
+  const overdue=state.todos.filter(o=>!o.done&&o.deadline&&o.deadline<todayStr()).length;
+  const stuck=state.projects.filter(p=>p.blocked);
+  const byP={P0:0,P1:0,P2:0};
+  doneWeek.forEach(o=>byP[o.priority]=(byP[o.priority]||0)+1);
+  const byProj={};
+  doneWeek.forEach(o=>{if(o.projectId){byProj[o.projectId]=(byProj[o.projectId]||0)+1;}});
+  const projRows=Object.keys(byProj).map(id=>({name:pname(id)||"(已删项目)",v:byProj[id]})).sort((a,b)=>b.v-a.v);
+  const maxProj=projRows.length?Math.max.apply(null,projRows.map(r=>r.v)):0;
+  const donutData=[{label:"P0",value:byP.P0,color:"#dc2626"},{label:"P1",value:byP.P1,color:"#f59e0b"},{label:"P2",value:byP.P2,color:"#0d9488"}];
+
+  let html='<div class="stats"><div class="stat"><div class="n">'+doneWeek.length+'</div><div class="l">本周完成</div></div>'
+    +'<div class="stat"><div class="n">'+openTotal+'</div><div class="l">进行中</div></div>'
+    +'<div class="stat"><div class="n" style="color:#dc2626">'+overdue+'</div><div class="l">逾期未完成</div></div>'
+    +'<div class="stat"><div class="n" style="color:#b91c1c">'+stuck.length+'</div><div class="l">卡住项目</div></div></div>';
+
+  html+='<div class="rgrid">';
+  html+='<div class="chartcard"><h3>优先级分布（本周完成）</h3>'+donut(donutData);
+  html+='<div class="legend"><span><i style="background:#dc2626"></i>P0 '+byP.P0+'</span><span><i style="background:#f59e0b"></i>P1 '+byP.P1+'</span><span><i style="background:#0d9488"></i>P2 '+byP.P2+'</span></div></div>';
+  html+='<div class="chartcard"><h3>精力分布（按项目）</h3>';
+  if(projRows.length){
+    projRows.forEach(r=>{html+='<div class="bar-row"><div class="bl" title="'+esc(r.name)+'">'+esc(r.name)+'</div><div class="bt"><div class="bf" style="width:'+Math.round(r.v/maxProj*100)+'%"></div></div><div class="bv">'+r.v+'</div></div>';});
+  }else{html+='<div class="empty">本周完成的任务还没有关联到项目。</div>';}
+  html+='</div></div>';
+
+  html+='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>卡点汇总</h2><div class="blockers">';
+  if(stuck.length===0&&overdue===0)html+='<div class="empty">本周没有卡点，顺畅。</div>';
+  stuck.forEach(p=>{html+='<div class="bk"><span class="dot"></span><div><b>'+esc(p.name)+'</b> 卡住'+(p.blockedNote?(' — '+esc(p.blockedNote)):'')+'</div></div>';});
+  state.todos.filter(o=>!o.done&&o.deadline&&o.deadline<todayStr()).forEach(o=>{html+='<div class="bk"><span class="dot"></span><div><b>'+esc(o.text)+'</b> 已逾期'+(o.extendedCount>0?('（顺延'+o.extendedCount+'次）'):'')+'</div></div>';});
+  html+='</div></div>';
+  $("#view").innerHTML=html;
+}
+
+/* ---- WORKLOG：WorkBuddy 任务记录 + 当日工作完成记录 ---- */
+function renderWorklog(){
+  const today=todayStr();
+  state.worklog=state.worklog||{};
+  const allDates=Object.keys(state.worklog).filter(d=>state.worklog[d]&&state.worklog[d].length).sort().reverse();
+  const todayList=state.worklog[today]||[];
+
+  let html='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>记录一条工作</h2>';
+  html+='<div class="desc">WorkBuddy 完成的任务会<strong>自动导入</strong>这里（无需手动填写）；待办里勾选「完成」也会自动记录。下方只用于补记<strong>其他</strong>类事情。</div>';
+  html+='<div style="margin-bottom:12px"><button class="btn" id="wl-sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>从 WorkBuddy 立即同步</button></div>';
+  html+='<div class="form-row"><div class="field"><label>日期</label><input id="wl-date" type="date" value="'+today+'"></div>';
+  html+='<div class="field" style="display:none"><label>来源</label><input id="wl-src" value="其他"></div></div>';
+  html+='<div class="form-row" style="margin-top:10px"><div class="field grow"><label>补记内容（其他来源）</label><input id="wl-title" placeholder="例如：参加 XX 会议、提交 XX 审批"></div></div>';
+  html+='<div class="form-row" style="margin-top:10px"><div class="field grow"><label>成果文件（文件名 / 链接，可选）</label><input id="wl-file" placeholder="例如：会议纪要.pdf"></div></div>';
+  html+='<div class="form-row" style="margin-top:10px"><div class="field grow"><label>备注 / 结论</label><input id="wl-note" placeholder="一句话结论或后续"></div>';
+  html+='<div class="field"><label>&nbsp;</label><button class="btn primary" id="wl-add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px"><path d="M12 5v14M5 12h14"/></svg>补记</button></div></div></div>';
+
+  // 当日工作完成记录
+  html+='<div class="card"><h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3 8-8"/><path d="M20 12v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg>当日工作完成记录（'+today+'）</h2>';
+  if(todayList.length){
+    html+=todayList.map(wlRow).join("");
+  }else{ html+='<div class="empty">今天还没有完成记录，勾选一条待办或上方记一条。</div>'; }
+  html+='</div>';
+
+  // 按日汇总
+  html+='<div class="card"><div style="display:flex;align-items:center;gap:10px"><h2 style="margin:0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 9l-5 5-3-3-4 4"/></svg>按日汇总</h2>';
+  html+='<button class="btn tiny" id="wl-csv" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>导出 CSV</button></div>';
+  html+='<div class="desc">方便以后按日汇总工作完成情况。</div>';
+  if(allDates.length===0){ html+='<div class="empty">还没有任何工作记录。</div>'; }
+  allDates.forEach(d=>{
+    const list=state.worklog[d];
+    html+='<div class="grp-head"><span class="bar" style="background:var(--teal)"></span>'+d+' <span class="cnt">'+list.length+' 条</span></div>';
+    html+=list.map(wlRow).join("");
+  });
+  html+='</div>';
+
+  $("#view").innerHTML=html;
+  $("#wl-add").onclick=addWorklog;
+  $("#wl-csv").onclick=exportWorklogCSV;
+  const syncBtn=$("#wl-sync"); if(syncBtn)syncBtn.onclick=syncWorkbuddy;
+  document.querySelectorAll("[data-wldel]").forEach(b=>b.onclick=()=>{delWorklog(b.getAttribute("data-wldel"));});
+}
+function wlRow(w){
+  const srcColor={WorkBuddy:"#0d9488","待办":"#0369a1","其他":"#64748b"}[w.source]||"#64748b";
+  let h='<div class="note"><div class="nt">'+esc(w.title)+'</div><div class="nm">';
+  h+='<span class="t" style="background:'+srcColor+'22;color:'+srcColor+'">'+esc(w.source)+'</span>';
+  if(w.file)h+='<span class="t">文件：'+esc(w.file)+'</span>';
+  if(w.note)h+='<span class="t">'+esc(w.note)+'</span>';
+  if(w.source==='WorkBuddy'){
+    h+='<span class="t" style="background:#ccfbf1;color:#0f766e;margin-left:auto">自动导入</span>';
+  }else{
+    h+='<button class="iconbtn del" data-wldel="'+w.id+'" style="margin-left:auto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>';
+  }
+  h+='</div></div>';
+  return h;
+}
+function addWorklog(){
+  const title=$("#wl-title").value.trim();if(!title){$("#wl-title").focus();return;}
+  const d=$("#wl-date").value||todayStr();
+  state.worklog=state.worklog||{};
+  if(!state.worklog[d])state.worklog[d]=[];
+  state.worklog[d].push({id:uid(),date:d,source:"其他",title,file:$("#wl-file").value.trim(),note:$("#wl-note").value.trim(),createdAt:Date.now()});
+  $("#wl-title").value="";$("#wl-file").value="";$("#wl-note").value="";
+  save();renderWorklog();
+}
+function delWorklog(id){
+  if(!confirm("删除这条工作记录？"))return;
+  Object.keys(state.worklog).forEach(d=>{state.worklog[d]=state.worklog[d].filter(x=>x.id!==id);if(state.worklog[d].length===0)delete state.worklog[d];});
+  save();renderWorklog();
+}
+function syncWorkbuddy(){
+  const btn=$("#wl-sync"); if(btn)btn.disabled=true;
+  fetch(API_BASE+"/api/import-workbuddy",{method:"POST"}).then(r=>r.json()).then(d=>{
+    renderWorklog();
+    if(d&&typeof d.added==="number"&&d.added>0&&typeof updateSync==="function")updateSync();
+  }).catch(()=>{renderWorklog();});
+}
+function exportWorklogCSV(){
+  const rows=[["日期","来源","任务标题","成果文件","备注"]];
+  Object.keys(state.worklog).sort().forEach(d=>state.worklog[d].forEach(w=>rows.push([d,w.source,w.title,w.file||"",w.note||""])));
+  const csv="\uFEFF"+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="工作完成记录-"+todayStr()+".csv";a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ---- export / clear ---- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="高全的工作台备份-"+todayStr()+".json";
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+function clearExamples(){
+  const seeds=state.todos.filter(o=>o.seed).length+state.notes.filter(o=>o.seed).length+state.projects.filter(o=>o.seed).length;
+  if(seeds===0){alert("没有可清空的示例数据。");return;}
+  if(!confirm("将清除 "+seeds+" 条示例数据（你自建的内容不受影响），确定？"))return;
+  state.todos=state.todos.filter(o=>!o.seed);
+  state.notes=state.notes.filter(o=>!o.seed);
+  state.projects=state.projects.filter(o=>!o.seed);
+  save();render();
+}
+
+/* ---- nav ---- */
+function switchView(v){
+  currentView=v;
+  document.querySelectorAll(".nav-btn").forEach(b=>b.classList.toggle("active",b.getAttribute("data-view")===v));
+  render();
+}
+
+/* ---- init ---- */
+document.querySelectorAll(".nav-btn").forEach(b=>b.onclick=()=>switchView(b.getAttribute("data-view")));
+$("#btn-export").onclick=exportData;
+$("#btn-clear").onclick=clearExamples;
+
+cacheLoad();          // 先用本地缓存秒开
+render();             // 立即渲染
+updateSync();
+apiGet().then(d=>{    // 拉取云端最新
+  const empty = d.todos.length===0 && d.notes.length===0 && d.projects.length===0 && !d.meta.seeded;
+  if(empty){
+    seed();           // 首次使用：写入示例
+    save();
+  }else{
+    applySnapshot(d);
+  }
+  if(!isEditing())render();
+}).catch(()=>{ updateSync(); /* 离线：用本地缓存 */ });
+connectWS();          // 建立 WebSocket，即时同步
+
+// PWA 注册
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(()=>{}); }
+</script>
+</body>
+</html>
