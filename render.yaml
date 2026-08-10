@@ -1,0 +1,29 @@
+# Render 一键部署蓝图（Render Blueprint）
+# 用法：把整个「高全的工作台」目录推到 GitHub，在 Render 新建 Blueprint 指向此仓库即可。
+# 部署后拿到一个 https 公网地址，手机/电脑填这个地址就能全球同步。
+# 端口由 Render 自动注入（PORT 环境变量），无需手动设置。
+#
+# 改动说明（v1.2）：
+#   - plan 由 free 升级为 starter（付费最小实例）：免费实例会休眠 + 临时磁盘，
+#     关机/重启后文件系统会被清空，导致 data.json 数据丢失；starter 实例常驻、可挂持久磁盘。
+#   - 新增 disk 持久磁盘（/data）：data.json 写入挂载盘，彻底解决数据丢失。
+#     本地开发无 /data 时自动回落到项目目录，行为不变。
+
+services:
+  - type: web
+    name: gaoq-workbench
+    runtime: node
+    plan: starter                     # 付费最小实例（常驻、可挂持久磁盘）
+    buildCommand: "node -v"          # 零依赖，无需 npm install；仅打印版本确认环境
+    startCommand: "node server.js"
+    healthCheckPath: "/"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # 持久磁盘挂载点；server.js 检测到 /data 存在即把 data.json 写到这里
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: workbench-data            # 持久磁盘（关联本服务，删除服务才会一并删除）
+      dir: /data                      # 挂载路径，对应 DATA_DIR
+      sizeGB: 1                       # 1GB 足够存放数万条记录
