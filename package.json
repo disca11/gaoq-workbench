@@ -1,0 +1,12 @@
+{
+  "name": "gaoq-workbench",
+  "version": "1.1.0",
+  "description": "高全的工作台 —— 云端同步版个人办公工作台（零依赖 Node 服务 + WebSocket + PWA）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
