@@ -1,0 +1,4 @@
+# 把你的 Render 公网地址写在这一行（不要带 # 号），例如：
+# https://gaoq-workbench.onrender.com
+# 保存后双击 install-desktop.bat 会自动读取本行，直接装云端版（无需命令行参数）。
+# 若本行留空或仍以 # 开头，则双击默认装本机离线版（http://localhost:8787）。
