@@ -1,0 +1,16 @@
+# 不打包进镜像的内容
+data.json
+_push_*.py
+_push_*.js
+*.bat
+*.ps1
+workbench-url.txt
+node_modules
+.git
+.gitignore
+deploy-helper.bat
+install-desktop.bat
+start-server.bat
+安装部署操作手册.md
+deploy-guide.md
+README*
